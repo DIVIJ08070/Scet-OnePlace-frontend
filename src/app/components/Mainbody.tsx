@@ -106,6 +106,7 @@ const MainBody = () => {
 
       setAccessToken(accessToken);
       setRefreshToken(refreshToken);
+       router.push('/profile');
 
       console.log(accessToken);
       console.log(refreshToken);

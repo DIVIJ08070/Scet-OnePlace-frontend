@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ExpandableCard from '@/app/offer/page';
+import ExpandableCard from '@/app/opportunity/page';
 
 interface Location {
   address_line: string;

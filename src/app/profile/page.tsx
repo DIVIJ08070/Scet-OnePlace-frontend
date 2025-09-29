@@ -9,6 +9,8 @@ import API, { setAxiosToken } from '../components/libs/axios';
 
 interface FormData {
   name: string;
+  profileImage:string;
+  resume:string;
   email: string;
   enrollment: string;
   dob: string;
@@ -72,6 +74,8 @@ console.log('Fetching student profile...');
 
         const studentProfile: StudentProfile = {
           name: data.name,
+          profileImage:data.profileImage,
+          resume:data.resume,
           email: data.email,
           enrollment: data.enrollment_no,
           dob: new Date(data.dob).toLocaleDateString(),
@@ -88,7 +92,13 @@ console.log('Fetching student profile...');
           pinCode: data.address.pincode.toString(),
 
           passoutYear: data.academic_details.passout_year.toString(),
-          semesterResults: [], // Degree SPI not provided in backend; initialize empty
+          semesterResults: result.degree?.result
+         ? Object.entries(result.degree.result)
+          .filter(([key]) => key.startsWith('sem'))
+          .sort(([a], [b]) => parseInt(a.replace(/\D/g, '')) - parseInt(b.replace(/\D/g, '')))
+          .map(([_, value]) => value.toString())
+          : [],
+
 
           tenthResult: result.ssc?.percentage ? `${result.ssc.percentage}%` : '',
           tenthPassoutYear: result.ssc?.completion_year?.toString() || '',
@@ -100,6 +110,8 @@ console.log('Fetching student profile...');
 
           diplomaSemesterResults: diplomaResults,
           diplomaPassoutYear: result.diploma?.completion_year?.toString() || '',
+
+
 
           cgpa: result.degree?.cgpa.toString() || "NA", 
           backlogs: result.degree?.backlogs || "NA", 

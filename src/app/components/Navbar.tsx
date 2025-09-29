@@ -4,6 +4,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { usePathname } from 'next/navigation';
 import { useToken } from './context/TokenContext';
+import Link from 'next/link';
 
 type GoogleUser = {
   name: string;
@@ -17,7 +18,7 @@ const Navbar = () => {
   const [user, setUser] = useState<GoogleUser | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
-  const {token,setToken} = useToken();
+  const { token, setToken } = useToken();
 
   const desktopDropdownRef = useRef<HTMLDivElement>(null);
   const mobileDropdownRef = useRef<HTMLDivElement>(null);
@@ -54,8 +55,8 @@ const Navbar = () => {
     const token = credentialResponse.credential;
     console.log(token);
     const decoded: any = jwtDecode(token);
-    setToken(token); 
-    localStorage.setItem('google-token', token); 
+    setToken(token);
+    localStorage.setItem('google-token', token);
 
     const userData: GoogleUser = {
       name: decoded.name,
@@ -70,11 +71,8 @@ const Navbar = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
-
     });
   };
-
-
 
   const handleSignOut = () => {
     console.log("🚪 Signing out...");
@@ -96,21 +94,25 @@ const Navbar = () => {
       <nav className={`fixed top-0 left-0 w-full h-20 z-50 p-4 md:p-6 flex justify-between items-center transition-all duration-300 ${
         isTransparent ? 'bg-transparent backdrop-blur-sm' : 'backdrop-blur-md bg-white/80'
       }`}>
-        <div className="flex items-center space-x-4">
-          <img src="sesuni.png" alt="Logo" className="h-10 w-10 md:h-12 md:w-12 rounded-full" />
-          <h1 className="text-xl md:text-2xl font-bold text-black">SCET OnePlace</h1>
-        </div>
+        <Link href="./">
+          <div className="flex items-center space-x-4">
+            <img src="sesuni.png" alt="Logo" className="h-10 w-10 md:h-12 md:w-12 rounded-full" />
+            <h1 className="text-xl md:text-2xl font-bold text-black">SCET OnePlace</h1>
+          </div>
+        </Link>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex space-x-6">
           <a className="text-black font-bold hover:text-blue-600" href="#about">About Us</a>
           <a className="text-black font-bold hover:text-blue-600" href="#policy">Policy</a>
           <a className="text-black font-bold hover:text-blue-600" href="#contact">Contact Us</a>
+
+          {/* Admin/Dashboard options */}
           {pathname === '/dashboard' && (
             <div className="relative">
               <button
                 onClick={() => setShowAddDropdown(prev => !prev)}
-                className="text-black font-bold  rounded inline-flex items-center"
+                className="text-black font-bold rounded inline-flex items-center"
               >
                 Add
                 <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,6 +126,28 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Student Dashboard options */}
+          {pathname === '/studentdashboard' && (
+            <>
+              <Link href="/opportunity" className="text-black font-bold hover:text-blue-600">
+                Opportunity
+              </Link>
+              <Link href="/profile" className="text-black font-bold hover:text-blue-600">
+                Profile
+              </Link>
+            </>
+          )}
+
+          {/* ✅ NEW: Show Dashboard Button if on Opportunity or Profile */}
+          {(pathname === '/opportunity' || pathname === '/profile') && (
+            <Link
+              href="/studentdashboard"
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
+            >
+              ⬅ Back to Dashboard
+            </Link>
           )}
         </div>
 
@@ -176,11 +200,34 @@ const Navbar = () => {
           <a className="text-black font-bold hover:text-blue-600" href="#about">About Us</a>
           <a className="text-black font-bold hover:text-blue-600" href="#policy">Policy</a>
           <a className="text-black font-bold hover:text-blue-600" href="#contact">Contact Us</a>
+
+          {/* Admin Options */}
           {pathname === '/dashboard' && (
-           <a className="text-black font-bold hover:text-blue-600">
+            <a className="text-black font-bold hover:text-blue-600" href="/dashboard/addcompany">
               Add Company
             </a>
-            
+          )}
+
+          {/* Student Dashboard Options */}
+          {pathname === '/studentdashboard' && (
+            <>
+              <Link href="/studentdashboard/opportunity" className="text-black font-bold hover:text-blue-600">
+                Opportunity
+              </Link>
+              <Link href="/studentdashboard/profile" className="text-black font-bold hover:text-blue-600">
+                Profile
+              </Link>
+            </>
+          )}
+
+          {/* ✅ Mobile: Back to Dashboard Button */}
+          {(pathname === '/opportunity' || pathname === '/profile') && (
+            <Link
+              href="/studentdashboard"
+              className="text-black font-bold hover:text-blue-600"
+            >
+              Dashboard
+            </Link>
           )}
 
           {/* Mobile Profile/Login */}
