@@ -1,7 +1,15 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpandableCard from '@/app/opportunity/page';
+=======
+import { motion, AnimatePresence} from 'framer-motion';
+import ExpandableCard from '@/app/offer/page';
+ import { Variants } from "framer-motion";
+
+
+>>>>>>> 70063cbd2ae4d62451555f208029902f4a2dee51
 
 interface Location {
   address_line: string;
@@ -96,12 +104,15 @@ const AddOfferForm = () => {
       console.log('Parsed Offers:', offersArray);
       setOffers(offersArray);
       setError(null);
-    } catch (err: any) {
-      const errorMessage = `Failed to load offers: ${err.message}`;
-      setError(errorMessage);
-      console.error('Fetch Error:', err.message);
-      setOffers([]);
-    } finally {
+    } catch (err: unknown) {
+  const errorMessage =
+    err instanceof Error ? `Failed to load offers: ${err.message}` : 'Unknown error';
+  setError(errorMessage);
+  console.error('Fetch Error:', err);
+  setOffers([]);
+}
+
+     finally {
       setIsLoading(false);
     }
   };
@@ -115,39 +126,46 @@ const AddOfferForm = () => {
   useEffect(() => {
     console.log('Offers State Updated:', offers);
   }, [offers]);
+const handleChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+) => {
+  const { name, value } = e.target;
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  // Handle nested fields like "location.city" or "criteria.min_result"
+  if (name.includes('.')) {
+    const [parent, child] = name.split('.') as [keyof Pick<OfferData, 'location' | 'criteria' | 'salary'>, string];
 
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      if (parent === 'salary' || parent === 'location' || parent === 'criteria') {
-        setOfferData((prev) => ({
-          ...prev,
-          [parent]: {
-            ...prev[parent as keyof OfferData],
-            [child]:
-              parent === 'location' && child === 'pincode'
-                ? parseInt(value) || 0
-                : parent === 'criteria' && child === 'min_result'
-                ? parseFloat(value) || 0
-                : parent === 'criteria' && child === 'max_backlog'
-                ? parseInt(value) || 0
-                : parent === 'criteria' && child === 'passout_year'
-                ? [parseInt(value) || 0]
-                : value,
-          },
-        }));
-      }
-    } else {
-      setOfferData((prev) => ({
+    setOfferData((prev) => {
+      // Narrow parent type
+      type NestedObject = OfferData['location'] | OfferData['criteria'] | OfferData['salary'];
+      const nested = prev[parent] as NestedObject;
+
+      // Determine new value with proper parsing
+      let parsedValue: string | number | number[];
+      if (parent === 'location' && child === 'pincode') parsedValue = parseInt(value) || 0;
+      else if (parent === 'criteria' && child === 'min_result') parsedValue = parseFloat(value) || 0;
+      else if (parent === 'criteria' && child === 'max_backlog') parsedValue = parseInt(value) || 0;
+      else if (parent === 'criteria' && child === 'passout_year') parsedValue = [parseInt(value) || 0];
+      else if (parent === 'salary') parsedValue = parseInt(value) || 0;
+      else parsedValue = value;
+
+      return {
         ...prev,
-        [name]: name === 'total_opening' ? parseInt(value) || 0 : value,
-      }));
-    }
-  };
+        [parent]: {
+          ...nested,
+          [child]: parsedValue,
+        },
+      };
+    });
+  } else {
+    // Handle top-level fields
+    setOfferData((prev) => ({
+      ...prev,
+      [name]: name === 'total_opening' ? parseInt(value) || 0 : value,
+    }));
+  }
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,17 +233,32 @@ const AddOfferForm = () => {
         criteria: { min_result: 0, max_backlog: 0, passout_year: [], branch: '' },
       });
       setError(null);
-    } catch (err: any) {
-      setError(`Failed to add offer: ${err.message}`);
-      console.error('Submit Error:', err.message);
-    }
+    } catch (err: unknown) {
+  const errorMessage =
+    err instanceof Error ? `Failed to add offer: ${err.message}` : 'Unknown error';
+  setError(errorMessage);
+  console.error('Submit Error:', err);
+}
+
   };
 
   // Animation variants
-  const formVariants = {
-    hidden: { opacity: 0, x: -50 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-  };
+
+
+const formVariants: Variants = {
+  hidden: { opacity: 0, x: -50 },
+  visible: { 
+    opacity: 1, 
+    x: 0, 
+    transition: { duration: 0.5, ease: "easeOut" } 
+  },
+  exit: { 
+    opacity: 0, 
+    x: 50, 
+    transition: { duration: 0.3, ease: "easeIn" } 
+  },
+};
+
 
   return (
     <div className="min-h-screen font-inter text-blue-800 p-6 mt-10 overflow-hidden">

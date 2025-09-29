@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Variants } from "framer-motion";
+import { easeIn, easeOut } from "framer-motion";
 
 interface Address {
   address_line: string;
@@ -27,7 +29,7 @@ const AddCompany = () => {
     logo: '',
     link: '',
     description: '',
-    contact: ''
+    contact: '',
   });
 
   const [addressData, setAddressData] = useState({
@@ -36,7 +38,7 @@ const AddCompany = () => {
     city: '',
     state: '',
     country: '',
-    pincode: ''
+    pincode: '',
   });
 
   const [companies, setCompanies] = useState<CompanyData[]>([]);
@@ -75,14 +77,20 @@ const AddCompany = () => {
       console.log('Parsed Companies:', companiesArray);
       setCompanies(companiesArray);
       setError(null);
-    } catch (err: any) {
-      const errorMessage = `Failed to load companies: ${err.message}`;
-      setError(errorMessage);
-      console.error('Fetch Error:', err.message);
-      setCompanies([]);
-    } finally {
-      setIsLoading(false);
-    }
+} catch (err: unknown) {
+  if (err instanceof Error) {
+    const errorMessage = `Failed to load companies: ${err.message}`;
+    setError(errorMessage);
+    console.error('Fetch Error:', err.message);
+  } else {
+    setError('An unknown error occurred.');
+    console.error('Fetch Error:', err);
+  }
+  setCompanies([]);
+} finally {
+  setIsLoading(false);
+}
+
   };
 
   // Initial fetch on mount
@@ -112,7 +120,7 @@ const AddCompany = () => {
       }
       const payload = {
         ...companyData,
-        address: { ...addressData, pincode: parseInt(addressData.pincode) || 0 }
+        address: { ...addressData, pincode: parseInt(addressData.pincode) || 0 },
       };
       console.log('POST Payload:', payload);
       const res = await fetch('http://127.0.0.1:5000/api/v1/company', {
@@ -141,10 +149,16 @@ const AddCompany = () => {
       setAddressData({ address_line: '', area: '', city: '', state: '', country: '', pincode: '' });
       setShowAddressForm(false);
       setError(null);
-    } catch (err: any) {
-      setError(`Failed to add company: ${err.message}`);
-      console.error('Submit Error:', err.message);
-    }
+} catch (err: unknown) {
+  if (err instanceof Error) {
+    setError(`Failed to add company: ${err.message}`);
+    console.error('Submit Error:', err.message);
+  } else {
+    setError('An unknown error occurred while adding the company.');
+    console.error('Submit Error:', err);
+  }
+}
+
   };
 
   const toggleCompanyDetails = (company: CompanyData) => {
@@ -152,15 +166,29 @@ const AddCompany = () => {
   };
 
   // Animation variants
-  const formVariants = {
-    hidden: { opacity: 0, x: -50 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-    exit: { opacity: 0, x: 50, transition: { duration: 0.3, ease: 'easeIn' } },
-  };
+  // const formVariants = {
+  //   hidden: { opacity: 0, x: -50 },
+  //   visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+  //   exit: { opacity: 0, x: 50, transition: { duration: 0.3, ease: 'easeIn' } },
+  // };
 
-  const cardVariants = {
+const formVariants: Variants = {
+  hidden: { opacity: 0, x: -50 },
+  visible: { 
+    opacity: 1, 
+    x: 0, 
+    transition: { duration: 0.5, ease: easeOut } 
+  },
+  exit: { 
+    opacity: 0, 
+    x: 50, 
+    transition: { duration: 0.3, ease: easeIn } 
+  },
+};
+
+  const cardVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: easeOut } },
   };
 
   const detailsVariants = {
@@ -307,7 +335,10 @@ const AddCompany = () => {
                 exit="exit"
               >
                 <div>
-                  <label htmlFor="address_line" className="block text-sm font-semibold text-gray-700 mb-1">
+                  <label
+                    htmlFor="address_line"
+                    className="block text-sm font-semibold text-gray-700 mb-1"
+                  >
                     Address Line
                   </label>
                   <input
@@ -496,7 +527,11 @@ const AddCompany = () => {
                             {`${company.address.address_line}, ${company.address.area}, ${company.address.city}, ${company.address.state}, ${company.address.country} - ${company.address.pincode}`}
                           </p>
                           <a
-                            href={company.link.startsWith('http') ? company.link : `https://${company.link}`}
+                            href={
+                              company.link.startsWith('http')
+                                ? company.link
+                                : `https://${company.link}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 text-sm hover:underline"
@@ -525,7 +560,11 @@ const AddCompany = () => {
           >
             <div className="flex items-center mb-4">
               <img
-                src={selectedCompany.logo.startsWith('http') ? selectedCompany.logo : `https://${selectedCompany.logo}`}
+                src={
+                  selectedCompany.logo.startsWith('http')
+                    ? selectedCompany.logo
+                    : `https://${selectedCompany.logo}`
+                }
                 alt={`${selectedCompany.name} logo`}
                 className="w-12 h-12 rounded-full object-cover mr-4"
                 onError={(e) => {
@@ -543,7 +582,11 @@ const AddCompany = () => {
               {`${selectedCompany.address.address_line}, ${selectedCompany.address.area}, ${selectedCompany.address.city}, ${selectedCompany.address.state}, ${selectedCompany.address.country} - ${selectedCompany.address.pincode}`}
             </p>
             <a
-              href={selectedCompany.link.startsWith('http') ? selectedCompany.link : `https://${selectedCompany.link}`}
+              href={
+                selectedCompany.link.startsWith('http')
+                  ? selectedCompany.link
+                  : `https://${selectedCompany.link}`
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 text-sm hover:underline"
