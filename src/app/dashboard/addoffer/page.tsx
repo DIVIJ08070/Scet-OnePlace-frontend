@@ -1,15 +1,7 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
+import React, { useState, useEffect ,useRef} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpandableCard from '@/app/opportunity/page';
-=======
-import { motion, AnimatePresence} from 'framer-motion';
-import ExpandableCard from '@/app/offer/page';
- import { Variants } from "framer-motion";
-
-
->>>>>>> 70063cbd2ae4d62451555f208029902f4a2dee51
 
 interface Location {
   address_line: string;
@@ -18,6 +10,11 @@ interface Location {
   state: string;
   country: string;
   pincode: number;
+}
+
+interface Company {
+  _id: string;
+  name: string;
 }
 
 interface Criteria {
@@ -70,6 +67,11 @@ const AddOfferForm = () => {
       branch: '',
     },
   });
+    // Company dropdown state
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companySearch, setCompanySearch] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [offers, setOffers] = useState<OfferData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,10 +119,47 @@ const AddOfferForm = () => {
     }
   };
 
-  // Initial fetch on mount
-  useEffect(() => {
-    fetchOffers();
+useEffect(() => {
+  const fetchCompanies = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:5000/api/v1/company');
+      const json = await res.json();
+
+      if (json.data && Array.isArray(json.data.company)) {
+        // Extract only name and _id
+        const companyList = json.data.company.map((c: any) => ({
+          _id: c._id,
+          name: c.name,
+        }));
+        setCompanies(companyList);
+      } else {
+        console.warn('Unexpected API response format:', json);
+      }
+    } catch (err) {
+      console.error('Failed to fetch companies:', err);
+    }
+  };
+
+  fetchCompanies();
+  fetchOffers(); // fetch existing offers
+}, []);
+
+
+    useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const filteredCompanies = companies.filter((c) =>
+    c.name.toLowerCase().includes(companySearch.toLowerCase())
+  );
+
+
 
   // Log offers state changes
   useEffect(() => {
@@ -196,7 +235,9 @@ const handleChange = (
           passout_year: offerData.criteria.passout_year.length
             ? offerData.criteria.passout_year
             : [new Date().getFullYear() + 1],
+          branch: offerData.criteria.branch.split(",")
         },
+        
       };
       console.log('POST Payload:', payload);
       const res = await fetch('http://127.0.0.1:5000/api/v1/offer', {
@@ -292,21 +333,56 @@ const formVariants: Variants = {
                 )}
               </motion.div>
             )}
+{/* Company Dropdown */}
+<div className="relative" ref={dropdownRef}>
+  <label className="block text-sm font-semibold text-gray-700 mb-1">
+    Company
+  </label>
+  <input
+    type="text"
+    placeholder="Search company..."
+    value={companySearch}
+    onFocus={() => setIsDropdownOpen(true)}
+    onChange={(e) => {
+      setCompanySearch(e.target.value);
+      setIsDropdownOpen(true);
+    }}
+    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 text-gray-800 bg-gray-50"
+    required
+  />
+  <AnimatePresence>
+    {isDropdownOpen && (
+      <motion.ul
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-auto shadow-lg"
+      >
+        {filteredCompanies.length ? (
+          filteredCompanies.map((company) => (
+            <li
+              key={company._id}
+              onClick={() => {
+                setOfferData((prev) => ({ ...prev, company: company._id }));
+                setCompanySearch(company.name);
+                setIsDropdownOpen(false);
+              }}
+              className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+            >
+              {company.name}
+            </li>
+          ))
+        ) : (
+          <li className="px-3 py-2 text-gray-400">No company found</li>
+        )}
+      </motion.ul>
+    )}
+  </AnimatePresence>
+</div>
 
-            <div>
-              <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-1">
-                Company ID
-              </label>
-              <input
-                type="text"
-                id="company"
-                name="company"
-                value={offerData.company}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 text-gray-800 bg-gray-50"
-                required
-              />
-            </div>
+{/* Hidden input to store company _id */}
+<input type="hidden" name="company" value={offerData.company} />
+
 
             <div>
               <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-1">
@@ -579,12 +655,13 @@ const formVariants: Variants = {
 
         {/* ExpandableCard Section - Scrollable */}
         <div className="lg:w-1/2 h-[calc(100vh-3rem)] -mt-7.5 pb-10">
-        <ExpandableCard/>
+        <ExpandableCard mode="reports" />
           
         </div>
       </div>
     </div>
   );
+
 };
 
 export default AddOfferForm;

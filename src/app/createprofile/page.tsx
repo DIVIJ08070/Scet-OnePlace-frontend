@@ -245,7 +245,7 @@ const Createprofile = () => {
       if (res.ok) {
         console.log('✅ Profile created successfully:', data);
         // Redirect or show success message
-        // router.push('/dashboard');
+        router.push('/studentdashboard');
       } else {
         console.error('❌ Failed to create profile:', data);
         // Handle error, show user a message

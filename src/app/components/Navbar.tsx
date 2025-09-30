@@ -144,9 +144,9 @@ const Navbar = () => {
           {(pathname === '/opportunity' || pathname === '/profile') && (
             <Link
               href="/studentdashboard"
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
+              className="text-black font-bold hover:text-blue-600"
             >
-              ⬅ Back to Dashboard
+              Back to Dashboard
             </Link>
           )}
         </div>

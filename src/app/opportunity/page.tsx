@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useEffect, useId, useRef, useState } from "react";
-import Image from "next/image"; // for optimized images
+import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "../components/hooks/use-outside-click";
+import API, { setAxiosToken } from '../components/libs/axios';
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
 
 // Interfaces
 interface Company {
@@ -58,15 +61,104 @@ interface Card {
   ctaLink: string;
   job: Job;
 }
+interface ExpandableCardProps {
+  mode?: "apply" | "reports"; // optional, defaults to apply
+}
 
-export default function ExpandableCard() {
+export default function ExpandableCard({ mode = "apply" }: ExpandableCardProps) {
   const [active, setActive] = useState<Card | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
 
   const ref = useRef<HTMLDivElement>(null);
-  const id = useId();
+
+  
+
+const handleApply = async (offerId: string) => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (token) setAxiosToken(token); // attach token to your axios instance
+    console.log('Access Token:', token);
+
+    console.log(`Applying for offer ${offerId}...`);
+    const res = await API.post(`/api/v1/student/apply/${offerId}`);
+
+    if (res.status !== 200) throw new Error(res.data.message || 'Failed to apply');
+
+    alert('Applied successfully! 🎉');
+    setActive(null); // close modal after success
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Apply error:', message);
+    alert(`Error: ${message}`);
+  }
+};
+
+
+
+const handleGenerateReport = async (offerId: string) => {
+  try {
+    // Attach token
+    const token = localStorage.getItem("accessToken");
+    if (token) setAxiosToken(token);
+
+    // Fetch report
+    const res = await API.get(`/api/v1/report/offer/${offerId}`);
+    if (res.status !== 200) throw new Error("Failed to fetch report");
+
+    const applicants = res.data.data.applicants || [];
+
+    // Map students safely
+const excelData = applicants
+  .map((app: any) => app?.data?.student)
+  .filter((student: any) => student)
+      .map((student: any) => ({
+        Name: student.name,
+        Enrollment: student.enrollment_no,
+        DOB: student.dob ? new Date(student.dob).toLocaleDateString() : "N/A",
+        Email: student.email,
+        Contact: student.contact || "N/A",
+        Gender: student.gender || "N/A",
+        Caste: student.caste || "N/A",
+        SSC_Percentage: student.academic_details?.result?.ssc?.percentage || "N/A",
+        SSC_Year: student.academic_details?.result?.ssc?.completion_year || "N/A",
+        HSC_Percentage: student.academic_details?.result?.hsc?.percentage || "N/A",
+        HSC_Year: student.academic_details?.result?.hsc?.completion_year || "N/A",
+        Degree_CGPA: student.academic_details?.result?.degree?.cgpa || "N/A",
+        Degree_Backlogs: student.academic_details?.result?.degree?.backlogs || "N/A",
+        Degree_Completion_Year: student.academic_details?.result?.degree?.completion_year || "N/A",
+        Address: student.address
+          ? `${student.address.address_line}, ${student.address.area}, ${student.address.city}, ${student.address.state}, ${student.address.country} - ${student.address.pincode}`
+          : "N/A",
+        Applied_Offers: student.applied?.join(", ") || "N/A",
+      }));
+
+    if (excelData.length === 0) {
+      alert("No student data available for this offer.");
+      return;
+    }
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Applicants");
+
+    // Convert to blob and download
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, `Offer_${offerId}_Report.xlsx`);
+
+    alert("Report downloaded successfully! 🎉");
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Report error:", message);
+    alert(`Error: ${message}`);
+  }
+};
+
 
   // Fetch data
   useEffect(() => {
@@ -91,7 +183,6 @@ export default function ExpandableCard() {
   // Escape key & body scroll
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => event.key === "Escape" && setActive(null);
-
     document.body.style.overflow = active ? "hidden" : "auto";
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -99,15 +190,25 @@ export default function ExpandableCard() {
 
   useOutsideClick(ref, () => setActive(null));
 
-  const cards: Card[] = jobs.map((job) => ({
+const cards: Card[] = [...jobs] // create a copy so original state is not mutated
+  .reverse()                     // reverse the order
+  .map((job) => ({
     title: job.company?.name || "Unknown Company",
     role: job.role,
-    description: `Location: ${job.location?.city || "Unknown"}, Criteria: CGPA > ${job.criteria?.min_result || "N/A"}`,
-    src: job.company?.logo?.startsWith("http") ? job.company.logo : `https://${job.company?.logo || ""}`,
+    description: `Location: ${job.location?.city || "Unknown"}, Criteria: CGPA > ${
+      job.criteria?.min_result || "N/A"
+    }`,
+    src: job.company?.logo?.startsWith("http")
+      ? job.company.logo
+      : `https://${job.company?.logo || ""}`,
     ctaText: "View Details",
-    ctaLink: job.company?.link?.startsWith("http") ? job.company.link : `https://${job.company?.link || "#"}`,
+    ctaLink: job.company?.link?.startsWith("http")
+      ? job.company.link
+      : `https://${job.company?.link || "#"}`,
     job,
   }));
+
+  
 
   return (
     <div className="bg-blue-50 min-h-screen p-6 mt-20">
@@ -140,7 +241,7 @@ export default function ExpandableCard() {
           {active && (
             <div className="fixed inset-0 flex items-center justify-center z-20 p-4">
               <motion.div
-                layoutId={`card-${active.title}-${id}`}
+                layoutId={`card-${active.job._id}`}
                 ref={ref}
                 className="w-full max-w-4xl bg-white rounded-xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
               >
@@ -166,14 +267,18 @@ export default function ExpandableCard() {
                       <h2 className="text-2xl font-bold text-gray-900">{active.title}</h2>
                       <p className="text-gray-600 mt-1">{active.role}</p>
                     </div>
-                    <a
-                      href={active.ctaLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                      {active.ctaText}
-                    </a>
+<button
+  onClick={() =>
+    mode === "apply"
+      ? handleApply(active.job._id)
+      : handleGenerateReport(active.job._id)
+  }
+  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+>
+  {mode === "apply" ? "Apply Now" : "Download Report"}
+</button>
+
+
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -196,7 +301,9 @@ export default function ExpandableCard() {
                       label="Salary"
                       value={
                         active.job.salary
-                          ? `₹${(active.job.salary.min / 100000).toFixed(2)} - ₹${(active.job.salary.max / 100000).toFixed(2)} LPA`
+                          ? `₹${(active.job.salary.min / 100000).toFixed(2)} - ₹${(
+                              active.job.salary.max / 100000
+                            ).toFixed(2)} LPA`
                           : "N/A"
                       }
                     />
@@ -208,21 +315,27 @@ export default function ExpandableCard() {
                       <Tag
                         label={
                           active.job.criteria
-                            ? `CGPA ${active.job.criteria.min_result}, Max Backlogs: ${active.job.criteria.max_backlog}, Branch: ${active.job.criteria.branch}, Passout: ${active.job.criteria.passout_year?.join(", ") || "N/A"}`
+                            ? `CGPA ${active.job.criteria.min_result}, Max Backlogs: ${active.job.criteria.max_backlog}, Branch: ${active.job.criteria.branch}, Passout: ${active.job.criteria.passout_year?.join(
+                                ", "
+                              ) || "N/A"}`
                             : "N/A"
                         }
                       />
-                      {active.job.skills?.map((skill, i) => skill && <Tag key={i} label={skill} />)}
+                      {active.job.skills?.map(
+                        (skill, i) => skill && <Tag key={`${active.job._id}-skill-${i}`} label={skill} />
+                      )}
                     </div>
                   </div>
 
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Job Description</h3>
                     <p className="text-gray-600">
-                      We&apos;re looking for talented individuals to join our team. This role involves working on cutting-edge
-                      technologies and collaborating with cross-functional teams to deliver high-quality solutions.
+                      We&apos;re looking for talented individuals to join our team. This role involves
+                      working on cutting-edge technologies and collaborating with cross-functional
+                      teams to deliver high-quality solutions.
                     </p>
                   </div>
+
                 </div>
               </motion.div>
             </div>
@@ -234,14 +347,14 @@ export default function ExpandableCard() {
           <div className="max-w-4xl mx-auto space-y-4">
             {cards.map((card) => (
               <motion.div
-                layoutId={`card-${card.title}-${id}`}
-                key={`card-${card.title}-${id}`}
+                layoutId={`card-${card.job._id}`}
+                key={`card-${card.job._id}`}
                 onClick={() => setActive(card)}
                 whileHover={{ scale: 1.01 }}
                 className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-4">
-                  <motion.div layoutId={`image-${card.title}-${id}`}>
+                  <motion.div layoutId={`image-${card.job._id}`}>
                     <Image
                       src={card.src}
                       alt={card.title}
@@ -251,20 +364,39 @@ export default function ExpandableCard() {
                     />
                   </motion.div>
                   <div className="flex-1">
-                    <motion.h3 layoutId={`title-${card.title}-${id}`} className="font-semibold text-gray-900">
+                    <motion.h3 layoutId={`title-${card.job._id}`} className="font-semibold text-gray-900">
                       {card.title}
                     </motion.h3>
-                    <motion.p layoutId={`description-${card.description}-${id}`} className="text-gray-600 text-sm">
+                    <motion.p layoutId={`description-${card.job._id}`} className="text-gray-600 text-sm">
                       {card.description}
                     </motion.p>
                   </div>
-                  <motion.button
-                    layoutId={`button-${card.title}-${id}`}
-                    className="px-4 py-2 text-sm rounded-lg font-medium bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors"
-                  >
-                    {card.ctaText}
-                  </motion.button>
+
+{/* <motion.button
+  onClick={(e) => {
+    e.stopPropagation();
+    setActive(card); // open modal immediately
+  }}
+  className="px-4 py-2 text-sm rounded-lg font-medium bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors"
+>
+  {mode === "apply" ? "Apply Now" : "View Report"}
+</motion.button> */}
+<motion.button
+  onClick={(e) => {
+    e.stopPropagation();
+    setActive(card); // open modal
+  }}
+  className="px-4 py-2 text-sm rounded-lg font-medium bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors"
+>
+  View Details
+</motion.button>
+
+
+
+
                 </div>
+
+
               </motion.div>
             ))}
           </div>
