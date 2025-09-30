@@ -52,6 +52,7 @@ const Navbar = () => {
 
   // Google login success
   const handleGoogleSuccess = async (credentialResponse: any) => {
+    console.log(credentialResponse)
     const token = credentialResponse.credential;
     console.log(token);
     const decoded: any = jwtDecode(token);
