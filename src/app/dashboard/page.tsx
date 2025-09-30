@@ -1,5 +1,7 @@
 'use client';
 import React from 'react';
+import BarGraph from '../components/bargraph';
+import VbarGraph from '../components/VbarGraph';
 
 const DashBoard = () => {
   return (
@@ -11,7 +13,7 @@ const DashBoard = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Student Placed */}
-          <div className="bg-blue-100 p-6 rounded-3xl shadow-2xl border-b-4 border-blue-600 overflow-hidden">
+          <div className="bg-blue-100 p-6 rounded-3xl shadow-2xl border-b-4 border-blue-600 overflow-hidden min-h-[400px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-800">Student Placed</h2>
               <div className="flex gap-2">
@@ -37,33 +39,32 @@ const DashBoard = () => {
                 </select>
               </div>
             </div>
-            <div className="h-32 flex items-center justify-center text-gray-500">
-              {/* Placeholder for content */}
+            <div className="h-[320px] flex items-center justify-center text-gray-500">
               Data here
             </div>
           </div>
 
           {/* Highest Package */}
-          <div className="bg-blue-100 p-6 rounded-3xl shadow-2xl border-b-4 border-blue-600">
+          <div className="bg-blue-100 p-6 rounded-3xl shadow-2xl border-b-4 border-blue-600 min-h-[400px]">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Highest Package</h2>
-            <div className="h-32 flex items-center justify-center text-gray-500">
-              ₹XX LPA
+            <div className="h-[320px] flex items-center justify-center">
+              <BarGraph />
             </div>
           </div>
 
           {/* Core/Others */}
-          <div className="bg-blue-100 p-6 rounded-3xl shadow-2xl border-b-4 border-blue-600">
+          <div className="bg-blue-100 p-6 rounded-3xl shadow-2xl border-b-4 border-blue-600 min-h-[400px]">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Core, Others</h2>
-            <div className="h-32 flex items-center justify-center text-gray-500">
-              Pie/Chart Here
+            <div className="h-[320px] flex items-center justify-center text-gray-500">
+              <VbarGraph/>
             </div>
           </div>
 
           {/* Average Package */}
-          <div className="bg-blue-100 p-6 rounded-3xl shadow-2xl border-b-4 border-blue-600">
+          <div className="bg-blue-100 p-6 rounded-3xl shadow-2xl border-b-4 border-blue-600 min-h-[400px]">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Average Package</h2>
-            <div className="h-32 flex items-center justify-center text-gray-500">
-              ₹XX LPA
+            <div className="h-[320px] flex items-center justify-center">
+                <BarGraph />
             </div>
           </div>
         </div>
