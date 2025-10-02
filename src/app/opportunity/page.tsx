@@ -267,16 +267,33 @@ const cards: Card[] = [...jobs] // create a copy so original state is not mutate
                       <h2 className="text-2xl font-bold text-gray-900">{active.title}</h2>
                       <p className="text-gray-600 mt-1">{active.role}</p>
                     </div>
-<button
-  onClick={() =>
-    mode === "apply"
-      ? handleApply(active.job._id)
-      : handleGenerateReport(active.job._id)
-  }
-  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
->
-  {mode === "apply" ? "Apply Now" : "Download Report"}
-</button>
+<div className="flex gap-4 mb-6">
+  {/* Primary Action */}
+  <button
+    onClick={() =>
+      mode === "apply"
+        ? handleApply(active.job._id)
+        : handleGenerateReport(active.job._id)
+    }
+    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+  >
+    {mode === "apply" ? "Apply Now" : "View Report"}
+  </button>
+
+  {/* Update Button */}
+  {mode === "reports" && (
+    <button
+      onClick={() => {
+        
+        console.log("Update clicked for offer:", active.job._id);
+      }}
+      className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+    >
+      Update
+    </button>
+  )}
+</div>
+
 
 
                   </div>
