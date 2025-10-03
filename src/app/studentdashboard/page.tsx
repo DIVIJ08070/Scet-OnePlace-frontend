@@ -1,6 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Calendar from 'react-calendar'; // ✅ import calendar
+import 'react-calendar/dist/Calendar.css'; // ✅ calendar styles
 import API, { setAxiosToken } from '../components/libs/axios';
 
 interface Offer {
@@ -27,6 +29,7 @@ const DashboardPage: React.FC = () => {
   const [student, setStudent] = useState<StudentProfile | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [date, setDate] = useState<Date>(new Date()); // ✅ state for calendar
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -59,7 +62,7 @@ const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 md:p-10 text-white flex flex-col gap-8">
+    <div className="min-h-screen p-6 mt-10 md:p-10 text-white flex flex-col gap-8 ">
       {/* Full Width Header */}
       <section className="rounded-xl bg-blue-700 bg-opacity-80 p-7 md:p-8 shadow-lg">
         <h1 className="text-4xl font-bold">👋 Welcome, {student?.name || 'Student'}!</h1>
@@ -70,66 +73,68 @@ const DashboardPage: React.FC = () => {
       </section>
 
       {/* Main Content Full Height */}
-      <div className="flex flex-col md:flex-row gap-8 h-[calc(100vh-160px)]">
+      <div className="flex flex-1 flex-col md:flex-row gap-8 h-[calc(100vh-200px)]">
         {/* Left Column: Applied Offers */}
-        <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
-          <div className="bg-blue-700/30 backdrop-blur-sm p-6 rounded-xl shadow flex flex-col gap-4">
-            <h2 className="text-2xl font-semibold mb-2">🎯 Applied Offers</h2>
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 bg-blue-700/30 backdrop-blur-sm p-6 rounded-xl shadow flex flex-col">
+            <h2 className="text-2xl font-semibold mb-4">🎯 Applied Offers</h2>
 
-            {offers.length > 0 ? (
-              offers.map((offer) => (
-                <div
-                  key={offer._id}
-                  onClick={() => toggleExpand(offer._id)}
-                  className="cursor-pointer border border-blue-500/40 rounded-xl p-4 bg-blue-700/20"
-                >
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-bold">{offer.company.name}</h3>
-                    <p className="text-sm">{offer.role}</p>
-                    <p className="text-sm text-gray-200">
-                      {offer.location.city}, {offer.location.state}
-                    </p>
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+              {offers.length > 0 ? (
+                offers.map((offer) => (
+                  <div
+                    key={offer._id}
+                    onClick={() => toggleExpand(offer._id)}
+                    className="cursor-pointer border border-blue-500/40 rounded-xl p-4 bg-blue-700/20"
+                  >
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-xl font-bold">{offer.company.name}</h3>
+                      <p className="text-sm">{offer.role}</p>
+                      <p className="text-sm text-gray-200">
+                        {offer.location.city}, {offer.location.state}
+                      </p>
+                    </div>
+
+                    <AnimatePresence>
+                      {expanded === offer._id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-4 text-sm space-y-2"
+                        >
+                          <p>
+                            <strong>Drive:</strong> {offer.drive} | <strong>Type:</strong> {offer.type} |{' '}
+                            <strong>Sector:</strong> {offer.sector}
+                          </p>
+                          <p>
+                            <strong>Total Openings:</strong> {offer.total_opening}
+                          </p>
+                          <p>
+                            <strong>Salary:</strong> ₹{offer.salary.min} - ₹{offer.salary.max}
+                          </p>
+                          <p>
+                            <strong>Criteria:</strong> Min CGPA {offer.criteria.min_result}, Max Backlogs{' '}
+                            {offer.criteria.max_backlog}
+                          </p>
+                          <p>
+                            <strong>Branches:</strong> {offer.criteria.branch.join(', ')}
+                          </p>
+                          <p>
+                            <strong>Passout Year:</strong> {offer.criteria.passout_year.join(', ')}
+                          </p>
+                          <p>
+                            <strong>Description:</strong> {offer.company.description}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-
-                  <AnimatePresence>
-                    {expanded === offer._id && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-4 text-sm space-y-2"
-                      >
-                        <p>
-                          <strong>Drive:</strong> {offer.drive} | <strong>Type:</strong> {offer.type} |{' '}
-                          <strong>Sector:</strong> {offer.sector}
-                        </p>
-                        <p>
-                          <strong>Total Openings:</strong> {offer.total_opening}
-                        </p>
-                        <p>
-                          <strong>Salary:</strong> ₹{offer.salary.min} - ₹{offer.salary.max}
-                        </p>
-                        <p>
-                          <strong>Criteria:</strong> Min CGPA {offer.criteria.min_result}, Max Backlogs{' '}
-                          {offer.criteria.max_backlog}
-                        </p>
-                        <p>
-                          <strong>Branches:</strong> {offer.criteria.branch.join(', ')}
-                        </p>
-                        <p>
-                          <strong>Passout Year:</strong> {offer.criteria.passout_year.join(', ')}
-                        </p>
-                        <p>
-                          <strong>Description:</strong> {offer.company.description}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))
-            ) : (
-              <p>No applied offers yet.</p>
-            )}
+                ))
+              ) : (
+                <p>No applied offers yet.</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -141,10 +146,17 @@ const DashboardPage: React.FC = () => {
             <p>No new notifications</p>
           </div>
 
-          {/* Schedule */}
+          {/* Schedule with Calendar */}
           <div className="bg-blue-700/30 backdrop-blur-sm p-6 rounded-xl shadow flex flex-col gap-3">
             <h2 className="text-2xl font-semibold">📅 Schedule</h2>
-            <p>No upcoming interviews</p>
+            <Calendar
+              onChange={setDate}
+              value={date}
+              className="rounded-xl text-black bg-white p-2"
+            />
+            <p className="text-sm mt-2">
+              Selected Date: <span className="font-semibold">{date.toDateString()}</span>
+            </p>
           </div>
         </div>
       </div>
