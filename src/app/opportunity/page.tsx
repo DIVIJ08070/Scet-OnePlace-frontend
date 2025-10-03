@@ -71,6 +71,9 @@ export default function ExpandableCard({ mode = "apply" }: ExpandableCardProps) 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [showUpdate, setShowUpdate] = useState(false);
+const [interviewDate, setInterviewDate] = useState<string>(""); // ISO string for date
+
 
 
   const ref = useRef<HTMLDivElement>(null);
@@ -93,6 +96,38 @@ const handleApply = async (offerId: string) => {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('Apply error:', message);
+    alert(`Error: ${message}`);
+  }
+};
+
+const handleUpdateDate = async (offerId?: string) => {
+  if (!offerId || !interviewDate) {
+    alert("Please select a date.");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (token) setAxiosToken(token);
+
+    // Convert to Date object
+    const dateObj = new Date(interviewDate); // input type="date" is already YYYY-MM-DD
+
+    const res = await API.post(`/api/v1/offer/${offerId}/addresult`, {
+      round_date: dateObj, // Send as Date object
+      students: [],        // optional
+    });
+
+    if (res.status === 200) {
+      alert("Interview date updated successfully! 🎉");
+      setShowUpdate(false);
+      setActive(null);
+    } else {
+      throw new Error(res.data.message || "Failed to update interview date");
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Update error:", message);
     alert(`Error: ${message}`);
   }
 };
@@ -281,17 +316,55 @@ const cards: Card[] = [...jobs] // create a copy so original state is not mutate
   </button>
 
   {/* Update Button */}
-  {mode === "reports" && (
-    <button
-      onClick={() => {
-        
-        console.log("Update clicked for offer:", active.job._id);
-      }}
-      className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+{mode === "reports" && (
+  <button
+    onClick={() => setShowUpdate(true)}
+    className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+  >
+    Update Interview Date
+  </button>
+)}
+
+<AnimatePresence>
+  {showUpdate && (
+    <motion.div
+      className="fixed inset-0 flex items-center justify-center z-30 bg-black/30"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
     >
-      Update
-    </button>
+      <motion.div
+        className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full"
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.8 }}
+      >
+        <h3 className="text-lg font-semibold mb-4">Update Interview Date</h3>
+        <input
+          type="date"
+          className="w-full p-2 border border-gray-300 rounded-lg mb-4"
+          value={interviewDate}
+          onChange={(e) => setInterviewDate(e.target.value)}
+        />
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setShowUpdate(false)}
+            className="px-4 py-2 rounded-lg border border-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => handleUpdateDate(active?.job._id)}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+          >
+            Save
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   )}
+</AnimatePresence>
+
 </div>
 
 

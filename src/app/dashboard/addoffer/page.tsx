@@ -654,7 +654,7 @@ const formVariants: Variants = {
         </div>
 
         {/* ExpandableCard Section - Scrollable */}
-        <div className="lg:w-1/2 h-[calc(100vh-3rem)] -mt-7.5 pb-10">
+        <div className="lg:w-1/2 overflow-y-auto h-[calc(100vh-3rem)] -mt-7.5 pb-10">
         <ExpandableCard mode="reports" />
           
         </div>

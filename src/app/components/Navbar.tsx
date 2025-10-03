@@ -109,25 +109,69 @@ const Navbar = () => {
           <a className="text-black font-bold hover:text-blue-600" href="#contact">Contact Us</a>
 
           {/* Admin/Dashboard options */}
-          {pathname === '/dashboard' && (
-            <div className="relative">
-              <button
-                onClick={() => setShowAddDropdown(prev => !prev)}
-                className="text-black font-bold rounded inline-flex items-center"
-              >
-                Add
-                <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {showAddDropdown && (
-                <div className="absolute z-10 bg-white text-black shadow-lg mt-2 rounded-md w-40">
-                  <a href="/dashboard/addcompany" className="block px-4 py-2 hover:bg-gray-100">Add Company</a>
-                  <a href="/dashboard/addoffer" className="block px-4 py-2 hover:bg-gray-100">Add Offer</a>
-                </div>
-              )}
+{pathname.startsWith('/dashboard') && (
+  <div className="relative flex items-center space-x-4">
+    {pathname === '/dashboard' ? (
+      <>
+        {/* Add Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowAddDropdown(prev => !prev)}
+            className="text-black font-bold rounded inline-flex items-center"
+          >
+            Add
+            <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showAddDropdown && (
+            <div className="absolute z-10 bg-white text-black shadow-lg mt-2 rounded-md w-40">
+              <a href="/dashboard/addcompany" className="block px-4 py-2 hover:bg-gray-100">Add Company</a>
+              <a href="/dashboard/addoffer" className="block px-4 py-2 hover:bg-gray-100">Add Offer</a>
             </div>
           )}
+        </div>
+
+        {/* Reports Button - Side by Side */}
+        <Link
+          href="/dashboard/Reports"
+          className="text-black font-bold hover:text-blue-600"
+        >
+          Reports
+        </Link>
+      </>
+    ) : (
+      <div className="flex space-x-4 items-center">
+        {/* Show only the other add option */}
+        {pathname.includes('addcompany') && (
+          <Link
+            href="/dashboard/addoffer"
+            className="text-black font-bold hover:text-blue-600"
+          >
+            Add Offer
+          </Link>
+        )}
+        {pathname.includes('addoffer') && (
+          <Link
+            href="/dashboard/addcompany"
+            className="text-black font-bold hover:text-blue-600"
+          >
+            Add Company
+          </Link>
+        )}
+
+        {/* Back to dashboard */}
+        <Link
+          href="/dashboard"
+          className="text-black font-bold hover:text-blue-600"
+        >
+          Back to Dashboard
+        </Link>
+      </div>
+    )}
+  </div>
+)}
+
 
           {/* Student Dashboard options */}
           {pathname === '/studentdashboard' && (

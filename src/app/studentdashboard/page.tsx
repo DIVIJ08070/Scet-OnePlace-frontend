@@ -16,7 +16,9 @@ interface Offer {
   sector: string;
   salary: { min: number; max: number };
   criteria: { min_result: number; max_backlog: number; passout_year: number[]; branch: string[] };
+  result?: { round_date: string }; // ✅ include this
 }
+
 
 interface StudentProfile {
   _id: string;
@@ -30,6 +32,9 @@ const DashboardPage: React.FC = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [date, setDate] = useState<Date>(new Date()); // ✅ state for calendar
+  const [roundDates, setRoundDates] = useState<{ offerName: string; date: Date }[]>([]);
+
+  
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -41,14 +46,34 @@ const DashboardPage: React.FC = () => {
         const user: StudentProfile = res.data.data.user;
         setStudent(user);
 
-        if (user.applied?.length) {
-          const fetchedOffers: Offer[] = [];
-          for (const id of user.applied) {
-            const offerRes = await API.get(`/api/v1/offer/${id}`);
-            fetchedOffers.push(offerRes.data.data.offer);
-          }
-          setOffers(fetchedOffers);
-        }
+if (user.applied?.length) {
+  const fetchedOffers = await Promise.all(
+    user.applied.map(async (id) => {
+      const offerRes = await API.get(`/api/v1/offer/${id}`);
+      return offerRes.data.data.offer;
+    })
+  );
+  setOffers(fetchedOffers);
+
+  // Extract round dates
+const rounds = fetchedOffers
+  .filter((offer) => offer.result?.round_date)
+  .map((offer) => {
+    const utcDate = new Date(offer.result.round_date);
+    return {
+      offerName: offer.company.name,
+      date: utcDate, // full UTC date-time
+      dayUTC: utcDate.getUTCDate(), // exact day in UTC
+      monthUTC: utcDate.getUTCMonth(),
+      yearUTC: utcDate.getUTCFullYear(),
+    };
+  });
+setRoundDates(rounds);
+console.log(rounds);
+
+}
+
+
       } catch (err) {
         console.error('Error fetching dashboard:', err);
       }
@@ -141,19 +166,70 @@ const DashboardPage: React.FC = () => {
         {/* Right Column: Notifications + Schedule */}
         <div className="w-full md:w-80 flex flex-col gap-6 overflow-y-auto">
           {/* Notifications */}
-          <div className="bg-blue-700/30 backdrop-blur-sm p-6 rounded-xl shadow flex flex-col gap-3">
-            <h2 className="text-2xl font-semibold">🔔 Notifications</h2>
-            <p>No new notifications</p>
-          </div>
+<div className="bg-blue-700/30 backdrop-blur-sm p-6 rounded-xl shadow-lg flex flex-col gap-4">
+  <h2 className="text-2xl font-semibold mb-2">🔔 Notifications</h2>
+
+  {roundDates.length > 0 ? (
+    roundDates.map((rd, idx) => (
+      <div
+        key={idx}
+        className="bg-white/10 backdrop-blur-md p-4 rounded-xl shadow-md flex justify-between items-center hover:bg-white/20 transition"
+      >
+        <div>
+          <p className="text-sm md:text-base">
+            📌 <strong>{rd.offerName}</strong> - {rd.date.toDateString()}
+          </p>
+          <span className="text-xs text-gray-200">
+            {rd.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+
+        <a
+          href={`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+            rd.offerName + ' Round'
+          )}&dates=${rd.date.toISOString().replace(/-|:|\.\d+/g, '')}/${new Date(
+            rd.date.getTime() + 60 * 60 * 1000
+          )
+            .toISOString()
+            .replace(/-|:|\.\d+/g, '')}&details=${encodeURIComponent(
+            'Interview round for ' + rd.offerName
+          )}&sf=true&output=xml`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-2 px-3 py-1 text-xs rounded bg-green-500 hover:bg-green-400 text-white transition"
+        >
+          Add to Google Calendar
+        </a>
+      </div>
+    ))
+  ) : (
+    <p className="text-sm text-gray-300">No upcoming rounds</p>
+  )}
+</div>
+
+
 
           {/* Schedule with Calendar */}
           <div className="bg-blue-700/30 backdrop-blur-sm p-6 rounded-xl shadow flex flex-col gap-3">
             <h2 className="text-2xl font-semibold">📅 Schedule</h2>
-            <Calendar
-              onChange={setDate}
-              value={date}
-              className="rounded-xl text-black bg-white p-2"
-            />
+<Calendar
+  onChange={setDate}
+  value={date}
+  tileClassName={({ date: tileDate, view }) => {
+    if (view === 'month') {
+      const match = roundDates.find(
+        (rd) =>
+          rd.date.getFullYear() === tileDate.getFullYear() &&
+          rd.date.getMonth() === tileDate.getMonth() &&
+          rd.date.getDate() === tileDate.getDate()
+      );
+      if (match) return 'calendar-round';
+    }
+    return '';
+  }}
+  className="rounded-xl text-black bg-white p-2"
+/>
+
             <p className="text-sm mt-2">
               Selected Date: <span className="font-semibold">{date.toDateString()}</span>
             </p>

@@ -41,3 +41,15 @@ body {
 }
 
 
+/* globals.css or DashboardPage.module.css */
+.calendar-round {
+  background-color: #f87171; /* Tailwind red-400 */
+  color: green;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto;
+}
