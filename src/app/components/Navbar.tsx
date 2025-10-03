@@ -97,15 +97,15 @@ const Navbar = () => {
       }`}>
         <Link href="./">
           <div className="flex items-center space-x-4">
-            <img src="sesuni.png" alt="Logo" className="h-10 w-10 md:h-12 md:w-12 rounded-full" />
+            <img src="/sesuni.png" alt="Logo" className="h-10 w-10 md:h-12 md:w-12 rounded-full" />
             <h1 className="text-xl md:text-2xl font-bold text-black">SCET OnePlace</h1>
           </div>
         </Link>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex space-x-6">
-          <a className="text-black font-bold hover:text-blue-600" href="#about">About Us</a>
-          <a className="text-black font-bold hover:text-blue-600" href="#policy">Policy</a>
+          <a className="text-black font-bold hover:text-blue-600" href="about">About Us</a>
+          <a className="text-black font-bold hover:text-blue-600" href="Tnp-policy">Policy</a>
           <a className="text-black font-bold hover:text-blue-600" href="#contact">Contact Us</a>
 
           {/* Admin/Dashboard options */}

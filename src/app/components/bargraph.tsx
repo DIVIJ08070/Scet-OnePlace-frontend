@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import {
   ComposedChart,
@@ -10,7 +11,18 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-const BarGraph = ({ data }) => {
+// Interface for the data points in the chart
+interface BarGraphData {
+  name: string;
+  pv?: number; // 'pv' is the key for the bar value
+}
+
+// Interface for the component's props
+interface BarGraphProps {
+  data: BarGraphData[];
+}
+
+const BarGraph: React.FC<BarGraphProps> = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart

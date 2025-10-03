@@ -1,7 +1,22 @@
+'use client';
 import React from 'react';
 import { BarChart, Bar, Rectangle, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const VbarGraph = ({ data }) => {
+// Interface for the data points in the chart
+interface SectorData {
+  name: string;
+  core?: number;
+  it?: number;
+  management?: number;
+  others?: number;
+}
+
+// Interface for the component's props
+interface VbarGraphProps {
+  data: SectorData[];
+}
+
+const VbarGraph: React.FC<VbarGraphProps> = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
