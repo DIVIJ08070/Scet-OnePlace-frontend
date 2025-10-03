@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import type { CredentialResponse } from '@react-oauth/google';
+import { useToken } from '../components/context/TokenContext';
 
 // Define interfaces for TypeScript
 interface FormData {
@@ -50,6 +51,7 @@ interface CustomJwtPayload extends JwtPayload {
 }
 
 const Createprofile = () => {
+  const { setAccessToken, setRefreshToken } = useToken();
   const router = useRouter();
   const [user, setUser] = useState<CustomJwtPayload | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -241,15 +243,28 @@ const Createprofile = () => {
         body: JSON.stringify(restructuredData),
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        console.log('✅ Profile created successfully:', data);
-        // Redirect or show success message
-        router.push('/studentdashboard');
-      } else {
-        console.error('❌ Failed to create profile:', data);
-        // Handle error, show user a message
-      }
+const data = await res.json();
+
+if (res.ok) {
+  console.log('✅ Profile created successfully:', data);
+
+
+  localStorage.setItem("accessToken", data.data.tokens.accessToken);
+  localStorage.setItem("refreshToken", data.data.tokens.refreshToken);
+
+  localStorage.setItem("student", JSON.stringify(data.data.student));
+
+  console.log( data.data.tokens.accessToken)
+  setAccessToken(data.data.tokens.accessToken);
+  setRefreshToken(data.data.tokens.refreshToken);
+
+  // Redirect
+  router.push('/studentdashboard');
+} else {
+  console.error('❌ Failed to create profile:', data);
+  // Show error message
+}
+
     } catch (error) {
       console.error('❌ Network error or API call failed:', error);
     }
