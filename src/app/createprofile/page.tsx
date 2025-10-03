@@ -11,8 +11,8 @@ import { useToken } from '../components/context/TokenContext';
 // Define interfaces for TypeScript
 interface FormData {
   name: string;
-  profileImage:String|null;
-  resume:String | null;
+  passportImage: string | null; // only this image as link
+  resumeLink: string | null; 
   email: string;
   enrollment_no: string;
   dob: string;
@@ -20,6 +20,7 @@ interface FormData {
   gender: string;
   caste: string;
 }
+
 
 interface AddressData {
   fullAddressLine: string;
@@ -55,17 +56,18 @@ const Createprofile = () => {
   const router = useRouter();
   const [user, setUser] = useState<CustomJwtPayload | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    profileImage: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJsAAACUCAMAAACz6atrAAAAbFBMVEX///8jHyAAAAAgHB38/PwhHyDY2Njt7e0dGBnh4eEaFRb39/cFAAAfGhvLy8vT09MTDA5VVFSurq64uLjn5+deXl7BwcGJiYmioqJjY2N9fHwLAARLSUqEg4MsKSpvb289PDwzMjKYmJhDQ0OTifG0AAAFRklEQVR4nO2c2ZaiMBCGmwphCUEDCAhh7/d/x0Edu3XcgKSicw7flRd9jn+H1F749bWysrKysrLyKdhOMuRlWeZD4tjvFvOL7WdlDwBcHODjp77M/I8QmJUdcM+6xOPQldm7hblJAyK0bgkFNIn7TmlZB94dYX9PD7r3nZ2fSvZQ2QEmU/890mIqnyoboZLGb1Bm108e5+WDrY1brJvCBGWHo4PUsEkEEZ8mzaKUR4FJaW718qpdICuTJ5cCnaHN4qkxZaMZWLO0WeYMIhGzhI0QkZiR5gKZq40SMHPlyjl2cEaWJqRls5/oEWEitlYLtVX40rKJ8eAGQD84O3qeejyGRdh+ZGPNNtK/EGuDrC1f+kjH6JDjSgu6KYnRfViHG/Od5cc2WoODqm2vpG2Pqq1aaqUHGKqLs/t79d5Uwh7Ti/jNUg9ygDSYVdeGKGkLMT3c/MztCtQsLlbUhlmsxktSN1PaPvncPljbJ9tCphIWxsCAmV46VMm/WZjB3u1VtIU9aiH4wbH+q57aProHr1G1bZTyN9yCwWXLLxxhuDm5vajhcEKUyEVgstwY0HtJ7vfSQsv7Rm+tLq5mkCuZA0G47OA8z0BHOl50cJSbGIK41ZKDY2Z65Ytqe+Sa/odyvjgw0lIdCYq5KaYojI1mXDJHHKWMGBzMOM2M8EBZY+iyndiy6eIY25qUNorrpz5W0RuW9vXlV9OsFao3jMXdcsLg2YPyPcsOSf/q6HhjaMZ2i1+DeJwHEwH1m9YcjjglA3JnlkopAVYaN4IRd/j5aG9zAOFdnx7xOEC+/U3BB1OXLhgAvi8fVlZHDQcpGPM8JiTwJqovuwujScNgJGg5BZDRaV2lY66T7Nv0u+u7Kmr3iXN1TPHoCgkU+LHBjuHodEOIpn2ZE8Gxty4gRi6z7PJnIC68evfy73e1d44fBHBrwN1lMCDSa/1n1yjwW0/+WgmF6vU/sxinE1f+gnDRJo++b5e0kl/6F0pFh3bpnOYmvhMh+iLeBddPyw52cdGIW78ssLKlbc/ubayM7h/6doizjeP4jrPJ4qHtR5931yUznKRkRx+nbJ7go/k2fd83o0GOvvjhXzKKcOd23auEjRASkldDpfHO6RcXCTpvB+mBNioizcrsBXXfI3T7OcXBwhVUb7PLn78e9QQCOtO62cXyc0ShT9pebfx3C9fWi9tZy5dC7uNZupLNVmWocB9dvZut3st2hAgtsctuEbRZotXh5LZSp/84Q7iOg2t1G+kJ2apL2+kLVtdocMDafdsZPrz+8ue4ShPTZ7BI1cdtsY5tvHGq1lBjXbfDkrmitrsvEekhlGrS0Kz0AKhl58uGV1O1qY24Sox4dUYouV830p0dXeIpvUjjdxix9AzpVULDBsvxnmAqSxmJ/qzyEq5ScCmtGr9GaYSf454bqGy/o6S8vyg5kQhZm0prBC1BOsE+WZvKQtwna9PcB/kXpb7IgOzfVEqGjcIq3muIUswKFr+NNQWm9kKv0n7lK1T3LwvEWka1QxikXEt//BaZKo9U3X7eu81TAR1L0kGrtRF9gkCrZRAdDKDbBQt9M3In5Tp9CeOpxnGgHXegSx2DTvN0PIgjoaH/EAoRxfpXHuykpM/WaF5DBNAywRna226SUiEXxVjCpKBp4mKuE7hJnnIANufxEgYg09zEz9cEflZXVEohGAsfnCE9BBMSMiaElLSqs6cLEdoFJkNdVL0Hp19GGlWeZJKjosOvJAHpq6IeEpOyLgS6vrPJ9nlZRF0j4IRouqgt8322cXz3LbJWVlZWVlZW/g/+ANeRVQQGZrG0AAAAAElFTkSuQmCC",
-    resume: "data:image/png;base64,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",
-    email: '',
-    enrollment_no: '',
-    dob: '',
-    contact: '',
-    gender: '',
-    caste: '',
-  });
+const [formData, setFormData] = useState<FormData>({
+  name: '',
+  passportImage: null,
+  resumeLink: null,
+  email: '',
+  enrollment_no: '',
+  dob: '',
+  contact: '',
+  gender: '',
+  caste: '',
+});
+
   const [addressData, setAddressData] = useState<AddressData>({
     fullAddressLine: '',
     area: '',
@@ -176,8 +178,8 @@ const Createprofile = () => {
     // --- START: Data Restructuring to match your desired format ---
     const restructuredData = {
       name: formData.name,
-      // resume:formData.resume,
-      // profileImage:formData.profileImage,
+  profileImage: formData.passportImage,
+  resume: formData.resumeLink,
       enrollment_no: formData.enrollment_no,
       dob: formData.dob,
       email: formData.email,
@@ -209,7 +211,7 @@ const Createprofile = () => {
               return acc;
             }, {} as Record<string, number>),
             completion_year: parseInt(academicData.passoutYear, 10), // You already have passoutYear
-//             cgpa: parseFloat(academicData.cgpa), // Convert to number
+            cgpa: parseFloat(academicData.cgpa), // Convert to number
             backlogs: parseInt(academicData.backlogs, 10), // Convert to number
           },
         },
@@ -410,6 +412,39 @@ if (res.ok) {
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 text-gray-800 bg-gray-50"
                   />
                 </div> */}
+
+                {/* Passport Size Image */}
+<div>
+  <label htmlFor="passportImage" className="block text-sm font-semibold text-gray-700 mb-1">
+    Passport Size Image URL
+  </label>
+  <input
+    type="text"
+    id="passportImage"
+    name="passportImage"
+    value={formData.passportImage || ''}
+    onChange={handleChange}
+    placeholder="Enter URL of Passport Size Image"
+    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 text-gray-800 bg-gray-50"
+  />
+</div>
+
+{/* Resume Link */}
+<div>
+  <label htmlFor="resumeLink" className="block text-sm font-semibold text-gray-700 mb-1">
+    Resume Drive Link
+  </label>
+  <input
+    type="text"
+    id="resumeLink"
+    name="resumeLink"
+    value={formData.resumeLink || ''}
+    onChange={handleChange}
+    placeholder="Enter Drive Link for Resume"
+    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 text-gray-800 bg-gray-50"
+  />
+</div>
+
                 <div>
                   <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1">
                     Email
