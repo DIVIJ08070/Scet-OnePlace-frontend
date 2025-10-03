@@ -68,10 +68,10 @@ const Navbar = () => {
     setUser(userData);
     localStorage.setItem('google-user', JSON.stringify(userData));
 
-    await fetch("http://localhost:3000/api/auth/google", {
+    await fetch("http://localhost:5000/api/v1/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ googleId:token }),
     });
   };
 
@@ -216,7 +216,7 @@ const Navbar = () => {
                 Opportunity
               </Link>
               <Link href="/studentdashboard/profile" className="text-black font-bold hover:text-blue-600">
-                Profile
+                Profile+
               </Link>
             </>
           )}
